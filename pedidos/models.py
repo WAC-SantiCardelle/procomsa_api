@@ -18,7 +18,7 @@ class Pedido(models.Model):
         default='pendiente',
         verbose_name="Estado"
     )
-    direccion_envio = models.TextField(verbose_name="Dirección de Envío")
+    direccion_envio = models.TextField(max_length=200, verbose_name="Dirección de Envío")
     documento = models.FileField(upload_to='pedidos/documents/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Actualización")

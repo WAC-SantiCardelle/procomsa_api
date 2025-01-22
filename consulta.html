@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pedidos</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5" x-data="pedidoApp">
+        <h1 class="text-center mb-4">Gestión de Pedidos</h1>
+
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label class="form-label">Fecha Inicio</label>
+                <input type="date" class="form-control" x-model="filters.fecha_inicio">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha Fin</label>
+                <input type="date" class="form-control" x-model="filters.fecha_fin">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Estado</label>
+                <select class="form-select" x-model="filters.estado">
+                    <option value="">Todos</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="validado">Validado</option>
+                    <option value="procesado">Procesado</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" @click="fetchPedidos">
+                Aplicar Filtros
+            </button>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div x-show="error" class="alert alert-danger" x-text="error"></div>
+
+        <!-- Indicador de carga -->
+        <div x-show="loading" class="text-center my-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+
+        <!-- Tabla de pedidos -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Cliente</th>
+                        <th>CIF</th>
+                        <th>Fecha Pedido</th>
+                        <th>Nº Pedido</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-if="pedidos.length === 0">
+                        <tr>
+                            <td colspan="6" class="text-center">No hay pedidos que coincidan con los filtros</td>
+                        </tr>
+                    </template>
+                    <template x-for="pedido in pedidos" :key="pedido.id">
+                        <tr>
+                            <td x-text="pedido.cliente_nombre"></td>
+                            <td x-text="pedido.cliente_cif"></td>
+                            <td x-text="formatearFecha(pedido.fecha_pedido)"></td>
+                            <td x-text="pedido.numero_pedido"></td>
+                            <td>
+                                <span x-text="pedido.estado"
+                                      :class="{
+                                          'badge bg-warning': pedido.estado === 'pendiente',
+                                          'badge bg-info': pedido.estado === 'validado',
+                                          'badge bg-success': pedido.estado === 'procesado',
+                                          'badge bg-danger': pedido.estado === 'cancelado'
+                                      }">
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" @click="verDetalle(pedido)">
+                                    Ver Detalle
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        <nav aria-label="Paginación" x-show="totalPages > 0">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" :class="{ 'disabled': currentPage === 1 }">
+                    <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">
+                        Anterior
+                    </a>
+                </li>
+                <template x-for="page in totalPages" :key="page">
+                    <li class="page-item" :class="{ 'active': currentPage === page }">
+                        <a class="page-link" href="#" @click.prevent="changePage(page)" x-text="page"></a>
+                    </li>
+                </template>
+                <li class="page-item" :class="{ 'disabled': currentPage === totalPages }">
+                    <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">
+                        Siguiente
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <script>
+        function pedidoApp() {
+            return {
+                pedidos: [],
+                error: null,
+                loading: false,
+                currentPage: 1,
+                totalPages: 0,
+                apiUrl: 'http://127.0.0.1:8000/api',
+                filters: {
+                    fecha_inicio: '',
+                    fecha_fin: '',
+                    estado: ''
+                },
+
+                async fetchPedidos() {
+                    this.loading = true;
+                    this.error = null;
+                    
+                    try {
+                        const queryParams = new URLSearchParams();
+                        
+                        if (this.filters.fecha_inicio) 
+                            queryParams.append('fecha_inicio', this.filters.fecha_inicio);
+                        if (this.filters.fecha_fin) 
+                            queryParams.append('fecha_fin', this.filters.fecha_fin);
+                        if (this.filters.estado) 
+                            queryParams.append('estado', this.filters.estado);
+                        
+                        queryParams.append('page', this.currentPage);
+
+                        const response = await fetch(
+                            `${this.apiUrl}/pedidos/?${queryParams.toString()}`,
+                            {
+                                headers: {
+                                    'Accept': 'application/json'
+                                }
+                            }
+                        );
+
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        this.pedidos = data.results;
+                        this.totalPages = Math.ceil(data.count / 8);
+                    } catch (error) {
+                        console.error('Error:', error);
+                        this.error = `Error al cargar los pedidos: ${error.message}`;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                formatearFecha(fecha) {
+                    return new Date(fecha).toLocaleDateString('es-ES');
+                },
+
+                changePage(page) {
+                    if (page >= 1 && page <= this.totalPages) {
+                        this.currentPage = page;
+                        this.fetchPedidos();
+                    }
+                },
+
+                verDetalle(pedido) {
+                    // Esta función la implementaremos después para ver el detalle
+                    console.log('Ver detalle del pedido:', pedido);
+                },
+
+                init() {
+                    this.fetchPedidos();
+                }
+            }
+        }
+    </script>
+</body>
+</html> 
