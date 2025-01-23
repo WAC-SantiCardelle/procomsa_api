@@ -7,7 +7,7 @@ class LineaPedidoSerializer(serializers.ModelSerializer):
         fields = ['id', 'producto', 'referencia', 'cantidad']
 
 class PedidoSerializer(serializers.ModelSerializer):
-    lineas = serializers.PrimaryKeyRelatedField(many=True, queryset=LineaPedido.objects.all())
+    lineas = LineaPedidoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Pedido

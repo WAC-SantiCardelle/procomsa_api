@@ -61,13 +61,12 @@
                         <th>Fecha Pedido</th>
                         <th>Nº Pedido</th>
                         <th>Estado</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="pedidos.length === 0">
                         <tr>
-                            <td colspan="6" class="text-center">No hay pedidos que coincidan con los filtros</td>
+                            <td colspan="5" class="text-center">No hay pedidos que coincidan con los filtros</td>
                         </tr>
                     </template>
                     <template x-for="pedido in pedidos" :key="pedido.id">
@@ -75,21 +74,18 @@
                             <td x-text="pedido.cliente_nombre"></td>
                             <td x-text="pedido.cliente_cif"></td>
                             <td x-text="formatearFecha(pedido.fecha_pedido)"></td>
-                            <td x-text="pedido.numero_pedido"></td>
                             <td>
-                                <span x-text="pedido.estado"
-                                      :class="{
-                                          'badge bg-warning': pedido.estado === 'pendiente',
-                                          'badge bg-info': pedido.estado === 'validado',
-                                          'badge bg-success': pedido.estado === 'procesado',
-                                          'badge bg-danger': pedido.estado === 'cancelado'
-                                      }">
-                                </span>
+                                <a href="#" @click.prevent="verDetallePedido(pedido)" x-text="pedido.numero_pedido"></a>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-info" @click="verDetalle(pedido)">
-                                    Ver Detalle
-                                </button>
+                                <span x-text="pedido.estado"
+                                    :class="{
+                                        'badge bg-warning': pedido.estado === 'pendiente',
+                                        'badge bg-info': pedido.estado === 'validado',
+                                        'badge bg-success': pedido.estado === 'procesado',
+                                        'badge bg-danger': pedido.estado === 'cancelado'
+                                    }">
+                                </span>
                             </td>
                         </tr>
                     </template>
@@ -98,7 +94,7 @@
         </div>
 
         <!-- Paginación -->
-        <nav aria-label="Paginación" x-show="totalPages > 0">
+        <nav aria-label="Paginación" x-show="totalPages > 0" class="mt-3 mb-4">
             <ul class="pagination justify-content-center">
                 <li class="page-item" :class="{ 'disabled': currentPage === 1 }">
                     <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">
@@ -117,12 +113,77 @@
                 </li>
             </ul>
         </nav>
+
+        <!-- Detalles del Pedido -->
+        <div x-show="pedidoSeleccionado" class="mt-4">
+            <h3 class="mb-3">Detalles del Pedido</h3>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Número de Pedido</label>
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.numero_pedido" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cliente</label>
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_nombre" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">CIF</label>
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_cif" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Fecha del Pedido</label>
+                                <input type="text" class="form-control" :value="formatearFecha(pedidoSeleccionado.fecha_pedido)" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Estado</label>
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.estado" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Dirección de Envío</label>
+                                <textarea class="form-control" x-model="pedidoSeleccionado.direccion_envio" readonly rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Líneas de Pedido -->
+                    <div class="mt-4">
+                        <h4>Líneas del Pedido</h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Referencia</th>
+                                        <th>Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="linea in pedidoSeleccionado.lineas" :key="linea.id">
+                                        <tr>
+                                            <td x-text="linea.producto"></td>
+                                            <td x-text="linea.referencia"></td>
+                                            <td x-text="linea.cantidad"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         function pedidoApp() {
             return {
                 pedidos: [],
+                pedidoSeleccionado: null,
                 error: null,
                 loading: false,
                 currentPage: 1,
@@ -185,9 +246,21 @@
                     }
                 },
 
-                verDetalle(pedido) {
-                    // Esta función la implementaremos después para ver el detalle
-                    console.log('Ver detalle del pedido:', pedido);
+                async verDetallePedido(pedido) {
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`${this.apiUrl}/pedidos/${pedido.id}/`);
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP: ${response.status}`);
+                        }
+                        const detallesPedido = await response.json();
+                        this.pedidoSeleccionado = detallesPedido;
+                    } catch (error) {
+                        console.error('Error:', error);
+                        this.error = `Error al cargar los detalles del pedido: ${error.message}`;
+                    } finally {
+                        this.loading = false;
+                    }
                 },
 
                 init() {
