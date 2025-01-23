@@ -116,43 +116,59 @@
 
         <!-- Detalles del Pedido -->
         <div x-show="pedidoSeleccionado" class="mt-4">
-            <h3 class="mb-3">Detalles del Pedido</h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">Detalles del Pedido</h3>
+                <div>
+                    <button class="btn btn-primary" @click="modoEdicion = !modoEdicion" x-text="modoEdicion ? 'Cancelar Edición' : 'Editar Pedido'"></button>
+                    <button x-show="modoEdicion" class="btn btn-success ms-2" @click="guardarCambios">Guardar Cambios</button>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Número de Pedido</label>
-                                <input type="text" class="form-control" x-model="pedidoSeleccionado.numero_pedido" readonly>
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.numero_pedido" :readonly="!modoEdicion">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Cliente</label>
-                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_nombre" readonly>
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_nombre" :readonly="!modoEdicion">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">CIF</label>
-                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_cif" readonly>
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_cif" :readonly="!modoEdicion">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha del Pedido</label>
-                                <input type="text" class="form-control" :value="formatearFecha(pedidoSeleccionado.fecha_pedido)" readonly>
+                                <input type="date" class="form-control" x-model="pedidoSeleccionado.fecha_pedido" :readonly="!modoEdicion">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Estado</label>
-                                <input type="text" class="form-control" x-model="pedidoSeleccionado.estado" readonly>
+                                <select class="form-select" x-model="pedidoSeleccionado.estado" :disabled="!modoEdicion">
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="validado">Validado</option>
+                                    <option value="procesado">Procesado</option>
+                                    <option value="cancelado">Cancelado</option>
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Dirección de Envío</label>
-                                <textarea class="form-control" x-model="pedidoSeleccionado.direccion_envio" readonly rows="3"></textarea>
+                                <textarea class="form-control" x-model="pedidoSeleccionado.direccion_envio" :readonly="!modoEdicion" rows="3"></textarea>
                             </div>
                         </div>
                     </div>
 
                     <!-- Líneas de Pedido -->
                     <div class="mt-4">
-                        <h4>Líneas del Pedido</h4>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">Líneas del Pedido</h4>
+                            <button x-show="modoEdicion" class="btn btn-success btn-sm" @click="agregarLinea">
+                                Añadir Línea
+                            </button>
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-sm">
                                 <thead>
@@ -160,14 +176,52 @@
                                         <th>Producto</th>
                                         <th>Referencia</th>
                                         <th>Cantidad</th>
+                                        <th x-show="modoEdicion" style="width: 100px">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <template x-for="linea in pedidoSeleccionado.lineas" :key="linea.id">
+                                    <template x-if="!pedidoSeleccionado.lineas || pedidoSeleccionado.lineas.length === 0">
                                         <tr>
-                                            <td x-text="linea.producto"></td>
-                                            <td x-text="linea.referencia"></td>
-                                            <td x-text="linea.cantidad"></td>
+                                            <td :colspan="modoEdicion ? '4' : '3'" class="text-center">
+                                                No hay líneas en el pedido
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-for="(linea, index) in pedidoSeleccionado.lineas || []" :key="index">
+                                        <tr>
+                                            <td>
+                                                <template x-if="modoEdicion">
+                                                    <input type="text" class="form-control form-control-sm" 
+                                                        x-model="linea.producto">
+                                                </template>
+                                                <template x-if="!modoEdicion">
+                                                    <span x-text="linea.producto"></span>
+                                                </template>
+                                            </td>
+                                            <td>
+                                                <template x-if="modoEdicion">
+                                                    <input type="text" class="form-control form-control-sm" 
+                                                        x-model="linea.referencia">
+                                                </template>
+                                                <template x-if="!modoEdicion">
+                                                    <span x-text="linea.referencia"></span>
+                                                </template>
+                                            </td>
+                                            <td>
+                                                <template x-if="modoEdicion">
+                                                    <input type="number" class="form-control form-control-sm" 
+                                                        x-model="linea.cantidad" min="1">
+                                                </template>
+                                                <template x-if="!modoEdicion">
+                                                    <span x-text="linea.cantidad"></span>
+                                                </template>
+                                            </td>
+                                            <td x-show="modoEdicion">
+                                                <button class="btn btn-danger btn-sm" 
+                                                    @click="eliminarLinea(index)">
+                                                    Eliminar
+                                                </button>
+                                            </td>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -184,6 +238,7 @@
             return {
                 pedidos: [],
                 pedidoSeleccionado: null,
+                modoEdicion: false,
                 error: null,
                 loading: false,
                 currentPage: 1,
@@ -254,10 +309,95 @@
                             throw new Error(`Error HTTP: ${response.status}`);
                         }
                         const detallesPedido = await response.json();
+                        detallesPedido.lineas = detallesPedido.lineas || [];
                         this.pedidoSeleccionado = detallesPedido;
                     } catch (error) {
                         console.error('Error:', error);
                         this.error = `Error al cargar los detalles del pedido: ${error.message}`;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                agregarLinea() {
+                    if (!this.pedidoSeleccionado.lineas) {
+                        this.pedidoSeleccionado.lineas = [];
+                    }
+                    
+                    this.pedidoSeleccionado.lineas = [
+                        ...this.pedidoSeleccionado.lineas,
+                        {
+                            id: null,
+                            producto: '',
+                            referencia: '',
+                            cantidad: 1
+                        }
+                    ];
+                },
+
+                eliminarLinea(index) {
+                    if (!this.pedidoSeleccionado.lineas) return;
+                    this.pedidoSeleccionado.lineas = this.pedidoSeleccionado.lineas.filter((_, i) => i !== index);
+                },
+
+                async guardarCambios() {
+                    this.loading = true;
+                    this.error = null;
+                    try {
+                        // Preparar los datos para enviar
+                        const pedidoData = {
+                            numero_pedido: this.pedidoSeleccionado.numero_pedido,
+                            cliente_nombre: this.pedidoSeleccionado.cliente_nombre,
+                            cliente_cif: this.pedidoSeleccionado.cliente_cif,
+                            fecha_pedido: this.pedidoSeleccionado.fecha_pedido,
+                            estado: this.pedidoSeleccionado.estado,
+                            direccion_envio: this.pedidoSeleccionado.direccion_envio,
+                            lineas: this.pedidoSeleccionado.lineas
+                                .filter(linea => linea.producto && linea.referencia)
+                                .map(linea => ({
+                                    id: linea.id === null ? undefined : linea.id,
+                                    producto: linea.producto,
+                                    referencia: linea.referencia,
+                                    cantidad: parseInt(linea.cantidad) || 1
+                                }))
+                        };
+
+                        if (pedidoData.lineas.length === 0) {
+                            throw new Error('Debe añadir al menos una línea de pedido con producto y referencia');
+                        }
+
+                        const response = await fetch(
+                            `${this.apiUrl}/pedidos/${this.pedidoSeleccionado.id}/`,
+                            {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify(pedidoData)
+                            }
+                        );
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            if (typeof errorData === 'object') {
+                                // Si es un objeto de errores, formatear el mensaje
+                                const errorMessages = Object.entries(errorData)
+                                    .map(([key, value]) => `${key}: ${value}`)
+                                    .join('\n');
+                                throw new Error(errorMessages);
+                            } else {
+                                throw new Error(errorData.detail || `Error HTTP: ${response.status}`);
+                            }
+                        }
+
+                        const pedidoActualizado = await response.json();
+                        this.pedidoSeleccionado = pedidoActualizado;
+                        this.modoEdicion = false;
+                        this.fetchPedidos(); // Actualizar la lista
+                    } catch (error) {
+                        console.error('Error:', error);
+                        this.error = `Error al guardar los cambios: ${error.message}`;
                     } finally {
                         this.loading = false;
                     }
