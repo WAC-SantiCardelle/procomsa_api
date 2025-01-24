@@ -79,10 +79,10 @@
                             <td>
                                 <span x-text="pedido.status.status_name"
                                     :class="{
-                                        'badge bg-warning': pedido.status.status_name.toLowerCase() === 'pendiente',
-                                        'badge bg-info': pedido.status.status_name.toLowerCase() === 'validado',
-                                        'badge bg-success': pedido.status.status_name.toLowerCase() === 'procesado',
-                                        'badge bg-danger': pedido.status.status_name.toLowerCase() === 'cancelado'
+                                        'badge bg-warning': pedido.status.status_name.toLowerCase() === 'revision',
+                                        'badge bg-info': pedido.status.status_name.toLowerCase() === 'validated',
+                                        'badge bg-success': pedido.status.status_name.toLowerCase() === 'auto_ok',
+                                        'badge bg-danger': pedido.status.status_name.toLowerCase() === 'discarded'
                                     }">
                                 </span>
                             </td>
