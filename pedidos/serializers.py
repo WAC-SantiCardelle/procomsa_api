@@ -1,58 +1,65 @@
 from rest_framework import serializers
-from .models import Pedido, LineaPedido
+from .models import OrderInfo, OrderData, StatusType
 
-class LineaPedidoSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(required=False)
+# Serializer para StatusType (si es necesario incluir detalles completos del estado)
+class StatusTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StatusType
+        fields = ['id_status_type', 'status_name']
+
+# Serializer para OrderData
+class OrderDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderData
+        fields = ['id', 'product_code', 'quantity', 'description']
+
+# Serializer para OrderInfo (antes Pedido)
+class OrderInfoSerializer(serializers.ModelSerializer):
+    status = StatusTypeSerializer(read_only=True)
+    status_id = serializers.PrimaryKeyRelatedField(
+        source='status',
+        queryset=StatusType.objects.all(),
+        write_only=True,
+        required=False
+    )
+    lines = OrderDataSerializer(many=True)
 
     class Meta:
-        model = LineaPedido
-        fields = ['id', 'producto', 'referencia', 'cantidad']
-
-class PedidoSerializer(serializers.ModelSerializer):
-    lineas = LineaPedidoSerializer(many=True)
-
-    class Meta:
-        model = Pedido
+        model = OrderInfo
         fields = [
-            'id', 'numero_pedido', 'cliente_nombre', 'cliente_cif', 
-            'fecha_pedido', 'estado', 'direccion_envio', 'documento', 
-            'created_at', 'updated_at', 'lineas'
+            'id_order', 'order_number', 'order_date', 'client_name', 'cif', 
+            'status', 'status_id', 'shipping_address', 'file_path', 
+            'created_at', 'updated_at', 'lines'
         ]
+        read_only_fields = ['created_at', 'updated_at']
 
     def update(self, instance, validated_data):
-        lineas_data = validated_data.pop('lineas', [])
+        lines_data = validated_data.pop('lines', [])
+        status = validated_data.pop('status', None)
         
+        # Actualizar campos del pedido
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+        
+        if status:
+            instance.status = status
+            
         instance.save()
 
-        lineas_actualizadas = []
-        
-        for linea_data in lineas_data:
-            linea_id = linea_data.get('id', None)
-            if linea_id:
-                try:
-                    linea = LineaPedido.objects.get(id=linea_id, pedido=instance)
-                    for key, value in linea_data.items():
-                        setattr(linea, key, value)
-                    linea.save()
-                    lineas_actualizadas.append(linea)
-                except LineaPedido.DoesNotExist:
-                    linea = LineaPedido.objects.create(pedido=instance, **linea_data)
-                    lineas_actualizadas.append(linea)
-            else:
-                linea = LineaPedido.objects.create(pedido=instance, **linea_data)
-                lineas_actualizadas.append(linea)
-
-        instance.lineas.exclude(id__in=[l.id for l in lineas_actualizadas]).delete()
+        # Gestionar líneas
+        instance.lines.all().delete()
+        for line_data in lines_data:
+            OrderData.objects.create(id_order=instance, **line_data)
 
         return instance
 
     def create(self, validated_data):
-        lineas_data = validated_data.pop('lineas', [])
-        pedido = Pedido.objects.create(**validated_data)
+        lines_data = validated_data.pop('lines', [])
+        status = validated_data.pop('status')
         
-        for linea_data in lineas_data:
-            LineaPedido.objects.create(pedido=pedido, **linea_data)
+        order = OrderInfo.objects.create(**validated_data, status=status)
+        
+        for line_data in lines_data:
+            OrderData.objects.create(id_order=order, **line_data)
             
-        return pedido
+        return order

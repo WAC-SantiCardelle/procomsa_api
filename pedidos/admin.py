@@ -1,28 +1,37 @@
 from django.contrib import admin
-from .models import Pedido, LineaPedido
+from .models import OrderInfo, OrderData, StatusType
 
-class LineaPedidoInline(admin.TabularInline):
-    model = LineaPedido
+# Inline para mostrar las líneas del pedido en el admin
+class OrderDataInline(admin.TabularInline):
+    model = OrderData
     extra = 1
-    fields = ['producto', 'referencia', 'cantidad']
+    fields = ['product_code', 'quantity', 'description']  # Los campos relevantes
 
-@admin.register(Pedido)
-class PedidoAdmin(admin.ModelAdmin):
-    list_display = ['numero_pedido', 'cliente_nombre', 'fecha_pedido', 'estado']
-    list_filter = ['estado', 'fecha_pedido']
-    search_fields = ['numero_pedido', 'cliente_nombre', 'cliente_cif']
+# Registro del modelo StatusType
+@admin.register(StatusType)
+class StatusTypeAdmin(admin.ModelAdmin):
+    list_display = ['id_status_type', 'status_name']
+    search_fields = ['status_name']
+    list_filter = ['status_name']
+
+# Registro del modelo OrderInfo (antes Pedido)
+@admin.register(OrderInfo)
+class OrderInfoAdmin(admin.ModelAdmin):
+    list_display = ['order_number', 'client_name', 'order_date', 'status']
+    list_filter = ['status', 'order_date']
+    search_fields = ['order_number', 'client_name', 'cif']
     readonly_fields = ['created_at', 'updated_at']
-    inlines = [LineaPedidoInline]
+    inlines = [OrderDataInline]  # Inline para las líneas de pedido
     
     fieldsets = (
         ('Información del Cliente', {
-            'fields': ('numero_pedido', 'cliente_nombre', 'cliente_cif')
+            'fields': ('order_number', 'client_name', 'cif')
         }),
         ('Detalles del Pedido', {
-            'fields': ('fecha_pedido', 'estado', 'direccion_envio')
+            'fields': ('order_date', 'status', 'shipping_address')
         }),
         ('Documentación', {
-            'fields': ('documento',)
+            'fields': ('file_path',)
         }),
         ('Información del Sistema', {
             'fields': ('created_at', 'updated_at'),
@@ -30,10 +39,11 @@ class PedidoAdmin(admin.ModelAdmin):
         })
     )
     
-    ordering = ['-fecha_pedido']
+    ordering = ['-order_date']
 
-@admin.register(LineaPedido)
-class LineaPedidoAdmin(admin.ModelAdmin):
-    list_display = ['pedido', 'producto', 'referencia', 'cantidad']
-    search_fields = ['producto', 'referencia']
+# Registro del modelo OrderData (antes LineaPedido)
+@admin.register(OrderData)
+class OrderDataAdmin(admin.ModelAdmin):
+    list_display = ['id_order', 'product_code', 'quantity', 'description']
+    search_fields = ['product_code', 'description']
     list_filter = ['created_at']

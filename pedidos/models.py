@@ -1,46 +1,53 @@
 from django.db import models
 
-class Pedido(models.Model):
-    ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente'),
-        ('validado', 'Validado'),
-        ('procesado', 'Procesado'), 
-        ('cancelado', 'Cancelado')
-    ]
+class StatusType(models.Model):
+    id_status_type = models.AutoField(primary_key=True, verbose_name="ID del Estado")
+    status_name = models.CharField(max_length=20, unique=True, verbose_name="Estado")
 
-    numero_pedido = models.CharField(max_length=30, unique=True)
-    cliente_nombre = models.CharField(max_length=100, verbose_name="Nombre del Cliente")
-    cliente_cif = models.CharField(max_length=12, verbose_name="CIF")
-    fecha_pedido = models.DateField(verbose_name="Fecha del Pedido")
-    estado = models.CharField(
-        max_length=10, 
-        choices=ESTADO_CHOICES,
-        default='pendiente',
-        verbose_name="Estado"
-    )
-    direccion_envio = models.TextField(max_length=200, verbose_name="Dirección de Envío")
-    documento = models.FileField(upload_to='pedidos/documents/', blank=True, null=True)
+    class Meta:
+        db_table = 'Status_type'  # Nombre personalizado de la tabla en la base de datos
+        verbose_name = "Estado"
+        verbose_name_plural = "Estados"
+        ordering = ['status_name']
+        
+    def __str__(self):
+        return self.status_name
+
+
+class OrderInfo(models.Model):
+    id_order = models.AutoField(primary_key=True, verbose_name="ID del Pedido")
+    order_number = models.CharField(max_length=30, unique=True, verbose_name="Número de Pedido")
+    order_date = models.DateField(verbose_name="Fecha del Pedido")
+    client_name = models.CharField(max_length=30, verbose_name="Nombre del Cliente")
+    cif = models.CharField(max_length=15, verbose_name="CIF")
+    status = models.ForeignKey(StatusType, on_delete=models.SET_NULL, null=True, verbose_name="Estado")
+    shipping_address = models.CharField(max_length=50, verbose_name="Dirección de Envío")
+    file_path = models.CharField(max_length=50, blank=True, null=True, verbose_name="Ruta del Archivo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Actualización")
 
     class Meta:
+        db_table = 'Order_info'  # Nombre personalizado de la tabla
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
-        ordering = ['-fecha_pedido']
+        ordering = ['-order_date']
 
     def __str__(self):
-        return f'Pedido {self.numero_pedido} ({self.estado}) - {self.cliente_nombre}'
+        return f'Pedido {self.order_number} ({self.status}) - {self.client_name}'
 
-    
-class LineaPedido(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='lineas')
-    producto = models.CharField(max_length=100, verbose_name="Producto")
-    referencia = models.CharField(max_length=20, verbose_name="Referencia")
-    cantidad = models.PositiveIntegerField()
+
+class OrderData(models.Model):
+    id_order = models.ForeignKey(OrderInfo, on_delete=models.CASCADE, related_name='lines', verbose_name="Pedido")
+    product_code = models.CharField(max_length=50, verbose_name="Referencia")
+    quantity = models.PositiveIntegerField(verbose_name="Cantidad")
+    description = models.CharField(max_length=100, verbose_name="Producto")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Actualización")
     
+    class Meta:
+        db_table = 'Order_data'  # Nombre personalizado de la tabla
+        verbose_name = "Línea de Pedido"
+        verbose_name_plural = "Líneas de Pedido"
+
     def __str__(self):
-        return f'Linea {self.id}: {self.producto} x {self.cantidad} (Ref: {self.referencia})'
-
-
+        return f'Linea {self.id}: {self.description} x {self.quantity} (Ref: {self.product_code})'

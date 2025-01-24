@@ -27,10 +27,9 @@
                 <label class="form-label">Estado</label>
                 <select class="form-select" x-model="filters.estado">
                     <option value="">Todos</option>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="validado">Validado</option>
-                    <option value="procesado">Procesado</option>
-                    <option value="cancelado">Cancelado</option>
+                    <template x-for="estado in estados" :key="estado.id_status_type">
+                        <option :value="estado.id_status_type" x-text="estado.status_name"></option>
+                    </template>
                 </select>
             </div>
         </div>
@@ -69,21 +68,21 @@
                             <td colspan="5" class="text-center">No hay pedidos que coincidan con los filtros</td>
                         </tr>
                     </template>
-                    <template x-for="pedido in pedidos" :key="pedido.id">
+                    <template x-for="pedido in pedidos" :key="pedido.id_order">
                         <tr>
-                            <td x-text="pedido.cliente_nombre"></td>
-                            <td x-text="pedido.cliente_cif"></td>
-                            <td x-text="formatearFecha(pedido.fecha_pedido)"></td>
+                            <td x-text="pedido.client_name"></td>
+                            <td x-text="pedido.cif"></td>
+                            <td x-text="formatearFecha(pedido.order_date)"></td>
                             <td>
-                                <a href="#" @click.prevent="verDetallePedido(pedido)" x-text="pedido.numero_pedido"></a>
+                                <a href="#" @click.prevent="verDetallePedido(pedido)" x-text="pedido.order_number"></a>
                             </td>
                             <td>
-                                <span x-text="pedido.estado"
+                                <span x-text="pedido.status.status_name"
                                     :class="{
-                                        'badge bg-warning': pedido.estado === 'pendiente',
-                                        'badge bg-info': pedido.estado === 'validado',
-                                        'badge bg-success': pedido.estado === 'procesado',
-                                        'badge bg-danger': pedido.estado === 'cancelado'
+                                        'badge bg-warning': pedido.status.status_name.toLowerCase() === 'pendiente',
+                                        'badge bg-info': pedido.status.status_name.toLowerCase() === 'validado',
+                                        'badge bg-success': pedido.status.status_name.toLowerCase() === 'procesado',
+                                        'badge bg-danger': pedido.status.status_name.toLowerCase() === 'cancelado'
                                     }">
                                 </span>
                             </td>
@@ -129,34 +128,34 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Número de Pedido</label>
-                                <input type="text" class="form-control" x-model="pedidoSeleccionado.numero_pedido" :readonly="!modoEdicion">
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.order_number" :readonly="!modoEdicion">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Cliente</label>
-                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_nombre" :readonly="!modoEdicion">
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.client_name" :readonly="!modoEdicion">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">CIF</label>
-                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cliente_cif" :readonly="!modoEdicion">
+                                <input type="text" class="form-control" x-model="pedidoSeleccionado.cif" :readonly="!modoEdicion">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Fecha del Pedido</label>
-                                <input type="date" class="form-control" x-model="pedidoSeleccionado.fecha_pedido" :readonly="!modoEdicion">
+                                <input type="date" class="form-control" x-model="pedidoSeleccionado.order_date" :readonly="!modoEdicion">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Estado</label>
-                                <select class="form-select" x-model="pedidoSeleccionado.estado" :disabled="!modoEdicion">
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="validado">Validado</option>
-                                    <option value="procesado">Procesado</option>
-                                    <option value="cancelado">Cancelado</option>
+                                <select class="form-select" x-model="pedidoSeleccionado.status.id_status_type" :disabled="!modoEdicion">
+                                    <option value="">Selecciona un estado</option>
+                                    <template x-for="estado in estados" :key="estado.id_status_type">
+                                        <option :value="estado.id_status_type" x-text="estado.status_name"></option>
+                                    </template>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Dirección de Envío</label>
-                                <textarea class="form-control" x-model="pedidoSeleccionado.direccion_envio" :readonly="!modoEdicion" rows="3"></textarea>
+                                <textarea class="form-control" x-model="pedidoSeleccionado.shipping_address" :readonly="!modoEdicion" rows="3"></textarea>
                             </div>
                         </div>
                     </div>
@@ -180,40 +179,40 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <template x-if="!pedidoSeleccionado.lineas || pedidoSeleccionado.lineas.length === 0">
+                                    <template x-if="!pedidoSeleccionado.lines || pedidoSeleccionado.lines.length === 0">
                                         <tr>
                                             <td :colspan="modoEdicion ? '4' : '3'" class="text-center">
                                                 No hay líneas en el pedido
                                             </td>
                                         </tr>
                                     </template>
-                                    <template x-for="(linea, index) in pedidoSeleccionado.lineas || []" :key="index">
+                                    <template x-for="(linea, index) in pedidoSeleccionado.lines || []" :key="index">
                                         <tr>
                                             <td>
                                                 <template x-if="modoEdicion">
                                                     <input type="text" class="form-control form-control-sm" 
-                                                        x-model="linea.producto">
+                                                        x-model="linea.product_code">
                                                 </template>
                                                 <template x-if="!modoEdicion">
-                                                    <span x-text="linea.producto"></span>
+                                                    <span x-text="linea.product_code"></span>
                                                 </template>
                                             </td>
                                             <td>
                                                 <template x-if="modoEdicion">
                                                     <input type="text" class="form-control form-control-sm" 
-                                                        x-model="linea.referencia">
+                                                        x-model="linea.description">
                                                 </template>
                                                 <template x-if="!modoEdicion">
-                                                    <span x-text="linea.referencia"></span>
+                                                    <span x-text="linea.description"></span>
                                                 </template>
                                             </td>
                                             <td>
                                                 <template x-if="modoEdicion">
                                                     <input type="number" class="form-control form-control-sm" 
-                                                        x-model="linea.cantidad" min="1">
+                                                        x-model="linea.quantity" min="1">
                                                 </template>
                                                 <template x-if="!modoEdicion">
-                                                    <span x-text="linea.cantidad"></span>
+                                                    <span x-text="linea.quantity"></span>
                                                 </template>
                                             </td>
                                             <td x-show="modoEdicion">
@@ -249,6 +248,7 @@
                     fecha_fin: '',
                     estado: ''
                 },
+                estados: [],
 
                 async fetchPedidos() {
                     this.loading = true;
@@ -262,7 +262,7 @@
                         if (this.filters.fecha_fin) 
                             queryParams.append('fecha_fin', this.filters.fecha_fin);
                         if (this.filters.estado) 
-                            queryParams.append('estado', this.filters.estado);
+                            queryParams.append('status', this.filters.estado);
                         
                         queryParams.append('page', this.currentPage);
 
@@ -304,12 +304,12 @@
                 async verDetallePedido(pedido) {
                     this.loading = true;
                     try {
-                        const response = await fetch(`${this.apiUrl}/pedidos/${pedido.id}/`);
+                        const response = await fetch(`${this.apiUrl}/pedidos/${pedido.id_order}/`);
                         if (!response.ok) {
                             throw new Error(`Error HTTP: ${response.status}`);
                         }
                         const detallesPedido = await response.json();
-                        detallesPedido.lineas = detallesPedido.lineas || [];
+                        detallesPedido.lines = detallesPedido.lines || [];
                         this.pedidoSeleccionado = detallesPedido;
                     } catch (error) {
                         console.error('Error:', error);
@@ -320,24 +320,24 @@
                 },
 
                 agregarLinea() {
-                    if (!this.pedidoSeleccionado.lineas) {
-                        this.pedidoSeleccionado.lineas = [];
+                    if (!this.pedidoSeleccionado.lines) {
+                        this.pedidoSeleccionado.lines = [];
                     }
                     
-                    this.pedidoSeleccionado.lineas = [
-                        ...this.pedidoSeleccionado.lineas,
+                    this.pedidoSeleccionado.lines = [
+                        ...this.pedidoSeleccionado.lines,
                         {
                             id: null,
-                            producto: '',
-                            referencia: '',
-                            cantidad: 1
+                            product_code: '',
+                            description: '',
+                            quantity: 1
                         }
                     ];
                 },
 
                 eliminarLinea(index) {
-                    if (!this.pedidoSeleccionado.lineas) return;
-                    this.pedidoSeleccionado.lineas = this.pedidoSeleccionado.lineas.filter((_, i) => i !== index);
+                    if (!this.pedidoSeleccionado.lines) return;
+                    this.pedidoSeleccionado.lines = this.pedidoSeleccionado.lines.filter((_, i) => i !== index);
                 },
 
                 async guardarCambios() {
@@ -346,28 +346,27 @@
                     try {
                         // Preparar los datos para enviar
                         const pedidoData = {
-                            numero_pedido: this.pedidoSeleccionado.numero_pedido,
-                            cliente_nombre: this.pedidoSeleccionado.cliente_nombre,
-                            cliente_cif: this.pedidoSeleccionado.cliente_cif,
-                            fecha_pedido: this.pedidoSeleccionado.fecha_pedido,
-                            estado: this.pedidoSeleccionado.estado,
-                            direccion_envio: this.pedidoSeleccionado.direccion_envio,
-                            lineas: this.pedidoSeleccionado.lineas
-                                .filter(linea => linea.producto && linea.referencia)
+                            order_number: this.pedidoSeleccionado.order_number,
+                            client_name: this.pedidoSeleccionado.client_name,
+                            cif: this.pedidoSeleccionado.cif,
+                            order_date: this.pedidoSeleccionado.order_date,
+                            status: this.pedidoSeleccionado.status.id_status_type,
+                            shipping_address: this.pedidoSeleccionado.shipping_address,
+                            lines: this.pedidoSeleccionado.lines
+                                .filter(linea => linea.description && linea.product_code)
                                 .map(linea => ({
-                                    id: linea.id === null ? undefined : linea.id,
-                                    producto: linea.producto,
-                                    referencia: linea.referencia,
-                                    cantidad: parseInt(linea.cantidad) || 1
+                                    product_code: linea.product_code,
+                                    description: linea.description,
+                                    quantity: parseInt(linea.quantity) || 1
                                 }))
                         };
 
-                        if (pedidoData.lineas.length === 0) {
+                        if (pedidoData.lines.length === 0) {
                             throw new Error('Debe añadir al menos una línea de pedido con producto y referencia');
                         }
 
                         const response = await fetch(
-                            `${this.apiUrl}/pedidos/${this.pedidoSeleccionado.id}/`,
+                            `${this.apiUrl}/pedidos/${this.pedidoSeleccionado.id_order}/`,
                             {
                                 method: 'PUT',
                                 headers: {
@@ -381,7 +380,6 @@
                         if (!response.ok) {
                             const errorData = await response.json();
                             if (typeof errorData === 'object') {
-                                // Si es un objeto de errores, formatear el mensaje
                                 const errorMessages = Object.entries(errorData)
                                     .map(([key, value]) => `${key}: ${value}`)
                                     .join('\n');
@@ -405,6 +403,21 @@
 
                 init() {
                     this.fetchPedidos();
+                    this.fetchEstados();
+                },
+
+                async fetchEstados() {
+                    try {
+                        const response = await fetch(`${this.apiUrl}/estados/`);
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP: ${response.status}`);
+                        }
+                        const data = await response.json();
+                        this.estados = data.results || data;
+                    } catch (error) {
+                        console.error('Error al cargar estados:', error);
+                        this.error = `Error al cargar los estados: ${error.message}`;
+                    }
                 }
             }
         }
