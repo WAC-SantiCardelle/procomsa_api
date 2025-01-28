@@ -25,12 +25,16 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label">Estado</label>
-                <select class="form-select" x-model="filters.estado">
-                    <option value="">Todos</option>
+                <select class="form-select" x-model="filters.estados" multiple>
+                    <option value="todos" @click.prevent="seleccionarTodos">Todos</option>
                     <template x-for="estado in estados" :key="estado.id_status_type">
                         <option :value="estado.id_status_type" x-text="estado.status_name"></option>
                     </template>
                 </select>
+              <!--   <button class="btn btn-outline-secondary btn-sm mt-2" 
+                    @click="filters.estados = []">
+                    Limpiar selección
+                </button> -->
             </div>
         </div>
 
@@ -246,7 +250,7 @@
                 filters: {
                     fecha_inicio: '',
                     fecha_fin: '',
-                    estado: ''
+                    estados: []
                 },
                 estados: [],
 
@@ -261,8 +265,13 @@
                             queryParams.append('fecha_inicio', this.filters.fecha_inicio);
                         if (this.filters.fecha_fin) 
                             queryParams.append('fecha_fin', this.filters.fecha_fin);
-                        if (this.filters.estado) 
-                            queryParams.append('status', this.filters.estado);
+                        // Filtrar el valor "todos" del array de estados
+                        const estadosFiltrados = this.filters.estados.filter(estado => estado !== 'todos');
+                        if (estadosFiltrados.length > 0) {
+                            this.filters.estados.forEach(estado => {
+                                queryParams.append('status', estado);
+                            });
+                        }
                         
                         queryParams.append('page', this.currentPage);
 
@@ -418,6 +427,15 @@
                         console.error('Error al cargar estados:', error);
                         this.error = `Error al cargar los estados: ${error.message}`;
                     }
+                },
+
+                seleccionarTodos(event) {
+                    event.preventDefault();
+                    // Filtrar los estados con ID 1 y 2
+                    this.filters.estados = this.estados
+                        .filter(estado => [1, 2].includes(estado.id_status_type))
+                        .map(estado => estado.id_status_type);
+                    this.fetchPedidos();
                 }
             }
         }
