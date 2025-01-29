@@ -25,6 +25,15 @@ class OrderInfoFilter(filters.FilterSet):
         fields = ['status']
 
 class OrderInfoViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para manejar las operaciones CRUD de los pedidos.
+
+    - **GET**: Listar todos los pedidos.
+    - **POST**: Crear un nuevo pedido.
+    - **GET {id}**: Obtener los detalles de un pedido específico.
+    - **PUT {id}**: Actualizar un pedido específico.
+    - **DELETE {id}**: Eliminar un pedido específico.
+    """
     queryset = OrderInfo.objects.all().select_related('status').prefetch_related('lines')
     serializer_class = OrderInfoSerializer
     pagination_class = CustomPagination
@@ -37,6 +46,11 @@ class OrderInfoViewSet(viewsets.ModelViewSet):
         return context
 
     def update(self, request, *args, **kwargs):
+        """
+        Actualiza un pedido específico.
+
+        Si se envía un `status_id`, se convierte a un objeto de estado.
+        """
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         
@@ -55,9 +69,27 @@ class OrderInfoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class OrderDataViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para manejar las operaciones CRUD de las líneas de pedido.
+
+    - **GET**: Listar todas las líneas de pedido.
+    - **POST**: Crear una nueva línea de pedido.
+    - **GET {id}**: Obtener los detalles de una línea de pedido específica.
+    - **PUT {id}**: Actualizar una línea de pedido específica.
+    - **DELETE {id}**: Eliminar una línea de pedido específica.
+    """
     queryset = OrderData.objects.all()
     serializer_class = OrderDataSerializer
 
 class StatusTypeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para manejar las operaciones CRUD de los tipos de estado.
+
+    - **GET**: Listar todos los tipos de estado.
+    - **POST**: Crear un nuevo tipo de estado.
+    - **GET {id}**: Obtener los detalles de un tipo de estado específico.
+    - **PUT {id}**: Actualizar un tipo de estado específico.
+    - **DELETE {id}**: Eliminar un tipo de estado específico.
+    """
     queryset = StatusType.objects.all()
     serializer_class = StatusTypeSerializer
