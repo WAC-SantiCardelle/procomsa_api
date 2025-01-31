@@ -22,15 +22,38 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3cx#s-jn2y27&x$a@o)qai@7a)l_e67$1r_x+%#yi@nux9jxh!'
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-3cx#s-jn2y27&x$a@o)qai@7a)l_e67$1r_x+%#yi@nux9jxh!')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+# Hosts permitidos
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '*',  # Reemplazar por el dominio real
+]
+# Seguridad en producción
+SECURE_SSL_REDIRECT = not DEBUG  # Redirige HTTP a HTTPS en producción
+SESSION_COOKIE_SECURE = not DEBUG  # Cookies seguras solo en HTTPS
+CSRF_COOKIE_SECURE = not DEBUG  # Protege CSRF solo en HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies reversos
 
+# CSRF y CORS
+CSRF_TRUSTED_ORIGINS = [
+    "https://tudominio.com",
+    "http://127.0.0.1",
+    "http://localhost",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://tudominio.com",
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+]
 
 # Application definition
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -44,6 +67,7 @@ INSTALLED_APPS = [
     'pedidos',
     'django_filters',
     'corsheaders',
+    'django_extensions',  # Para runserver con SSL en local
 ]
 
 MIDDLEWARE = [
@@ -150,8 +174,3 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 8
 }
-
-CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-]

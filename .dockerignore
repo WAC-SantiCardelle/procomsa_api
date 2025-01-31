@@ -1,0 +1,9 @@
+consulta.html
+
+db.sqlite3
+
+venv/
+
+cert.crt
+cert.key
+ssl/
