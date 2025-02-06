@@ -30,14 +30,14 @@ class OrderDataSerializer(serializers.ModelSerializer):
         - `description`: Descripción del producto (requerido).
 
     - **Campos de salida**: 
-        - `id`
+        - `id_product`
         - `product_code`
         - `quantity`
         - `description`
     """
     class Meta:
         model = OrderData
-        fields = ['id', 'product_code', 'quantity', 'description']
+        fields = ['id_product', 'product_code', 'quantity', 'description']
 
 # Serializer para OrderInfo (antes Pedido)
 class OrderInfoSerializer(serializers.ModelSerializer):

@@ -5,7 +5,7 @@ class StatusType(models.Model):
     status_name = models.CharField(max_length=20, unique=True, verbose_name="Estado")
 
     class Meta:
-        db_table = 'Status_type'  # Nombre personalizado de la tabla en la base de datos
+        db_table = 'status_type'  # Nombre personalizado de la tabla en la base de datos
         verbose_name = "Estado"
         verbose_name_plural = "Estados"
         ordering = ['status_name']
@@ -20,14 +20,14 @@ class OrderInfo(models.Model):
     order_date = models.DateField(verbose_name="Fecha del Pedido")
     client_name = models.CharField(max_length=30, verbose_name="Nombre del Cliente")
     cif = models.CharField(max_length=15, verbose_name="CIF")
-    status = models.ForeignKey(StatusType, on_delete=models.SET_NULL, null=True, verbose_name="Estado")
+    status = models.ForeignKey(StatusType, on_delete=models.SET_NULL, db_column='status', null=True, verbose_name="Estado")
     shipping_address = models.CharField(max_length=50, verbose_name="Dirección de Envío")
     file_path = models.CharField(max_length=50, blank=True, null=True, verbose_name="Ruta del Archivo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Actualización")
 
     class Meta:
-        db_table = 'Order_info'  # Nombre personalizado de la tabla
+        db_table = 'order_info'  # Nombre personalizado de la tabla
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
         ordering = ['-order_date']
@@ -37,7 +37,12 @@ class OrderInfo(models.Model):
 
 
 class OrderData(models.Model):
-    id_order = models.ForeignKey(OrderInfo, on_delete=models.CASCADE, related_name='lines', verbose_name="Pedido")
+    id_product = models.AutoField(primary_key=True, verbose_name="ID del Producto")
+    id_order = models.ForeignKey(
+        OrderInfo, on_delete=models.CASCADE,
+        db_column='id_order',
+        related_name='lines',
+        verbose_name="Pedido")
     product_code = models.CharField(max_length=50, verbose_name="Referencia")
     quantity = models.PositiveIntegerField(verbose_name="Cantidad")
     description = models.CharField(max_length=100, verbose_name="Producto")
@@ -45,7 +50,7 @@ class OrderData(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Actualización")
     
     class Meta:
-        db_table = 'Order_data'  # Nombre personalizado de la tabla
+        db_table = 'order_data'  # Nombre personalizado de la tabla
         verbose_name = "Línea de Pedido"
         verbose_name_plural = "Líneas de Pedido"
 

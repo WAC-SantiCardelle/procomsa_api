@@ -34,10 +34,10 @@ ALLOWED_HOSTS = [
     '*',  # Reemplazar por el dominio real
 ]
 # Seguridad en producción
-SECURE_SSL_REDIRECT = not DEBUG  # Redirige HTTP a HTTPS en producción
-SESSION_COOKIE_SECURE = not DEBUG  # Cookies seguras solo en HTTPS
-CSRF_COOKIE_SECURE = not DEBUG  # Protege CSRF solo en HTTPS
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies reversos
+SECURE_SSL_REDIRECT = False # not DEBUG  # Redirige HTTP a HTTPS en producción
+SESSION_COOKIE_SECURE = False # not DEBUG  # Cookies seguras solo en HTTPS
+CSRF_COOKIE_SECURE = False # not DEBUG  # Protege CSRF solo en HTTPS
+SECURE_PROXY_SSL_HEADER = None # ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies reversos
 
 # CSRF y CORS
 CSRF_TRUSTED_ORIGINS = [
