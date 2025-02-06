@@ -13,6 +13,8 @@ class CustomPagination(PageNumberPagination):
 class OrderInfoFilter(filters.FilterSet):
     fecha_inicio = filters.DateFilter(field_name='order_date', lookup_expr='gte')
     fecha_fin = filters.DateFilter(field_name='order_date', lookup_expr='lte')
+    mod_inicio = filters.DateFilter(field_name='updated_at', lookup_expr='gte')  # Nuevo filtro
+    mod_fin = filters.DateFilter(field_name='updated_at', lookup_expr='lte')  # Nuevo filtro
     status = filters.ModelMultipleChoiceFilter(
         queryset=StatusType.objects.all(),
         field_name='status',
