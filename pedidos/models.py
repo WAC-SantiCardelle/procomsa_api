@@ -44,7 +44,7 @@ class OrderData(models.Model):
         related_name='lines',
         verbose_name="Pedido")
     product_code = models.CharField(max_length=50, verbose_name="Referencia")
-    quantity = models.PositiveIntegerField(verbose_name="Cantidad")
+    quantity = models.FloatField(verbose_name="Cantidad")
     description = models.CharField(max_length=100, verbose_name="Producto")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Actualización")

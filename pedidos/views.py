@@ -1,9 +1,11 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
 from django_filters import rest_framework as filters
 from .models import OrderInfo, OrderData, StatusType
 from .serializers import OrderInfoSerializer, OrderDataSerializer, StatusTypeSerializer
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from .utils import generate_txt # importar la funcion desde utils
 
 class CustomPagination(PageNumberPagination):
     page_size = 8
@@ -69,6 +71,41 @@ class OrderInfoViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
 
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['put'], url_path='generate-txt')
+    def generate_txt_update(self, request, pk=None):
+        """
+        Endpoint para actualizar un pedido y generar un archivo TXT.
+        PUT /api/pedidos/{id}/generate-txt/
+        """
+        try:
+            # Obteenr la instancia del pedido
+            instance = self.get_object()
+
+            # Actializar el pedido usando el metodo update existente
+            response = self.update(request, pk=pk)  
+
+            if response.status_code == status.HTTP_200_OK:
+                # Si la actualizacion ha sido correcta, generar el txt
+                try:
+                     generate_txt(instance) # Usar la función importada
+                     return Response({
+                          'message': 'Pedido actualizado y archivo generado con exito',
+                          'data': response.data
+                     })
+                except Exception as e:
+                     return Response({
+                          'message': f'Pedido actualizado pero error al generar el TXT: {str(e)}',
+                          'data': response.data
+                     }, status=status.HTTP_206_PARTIAL_CONTENT)
+                
+            return response
+        
+        except Exception as e:
+            return Response({
+                'error': f'Error al procesar la solicitud: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+                    
 
 class OrderDataViewSet(viewsets.ModelViewSet):
     """
