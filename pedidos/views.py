@@ -8,9 +8,9 @@ from rest_framework.decorators import action
 from .utils import generate_txt # importar la funcion desde utils
 
 class CustomPagination(PageNumberPagination):
-    page_size = 8
+    page_size = 200
     page_size_query_param = 'page_size'
-    max_page_size = 100
+    max_page_size = 300
 
 class OrderInfoFilter(filters.FilterSet):
     fecha_inicio = filters.DateFilter(field_name='order_date', lookup_expr='gte')
@@ -94,10 +94,25 @@ class OrderInfoViewSet(viewsets.ModelViewSet):
                           'data': response.data
                      })
                 except Exception as e:
-                     return Response({
-                          'message': f'Pedido actualizado pero error al generar el TXT: {str(e)}',
-                          'data': response.data
-                     }, status=status.HTTP_206_PARTIAL_CONTENT)
+                     # Si falla la generación del TXT, cambiar el estado a 3 'revision'
+                    try:
+                        error_status = StatusType.objects.get(id_status_type=3)
+                        instance.status = error_status
+                        instance.save()
+                        return Response({
+                            'message': f'Pedido actualizado pero error al generar TXT: {str(e)}. Estado cambiado a revision.',
+                            'data': self.get_serializer(instance).data
+                        }, status=status.HTTP_206_PARTIAL_CONTENT)
+                    except StatusType.DoesNotExist:
+                        return Response({
+                            'message': f'Error al generar TXT y al cambiar estado: Status 3 no existe',
+                            'data': response.data
+                        }, status=status.HTTP_206_PARTIAL_CONTENT)
+                    except Exception as status_error:
+                        return Response({
+                            'message': f'Error al generar TXT y al cambiar estado: {str(status_error)}',
+                            'data': response.data
+                        }, status=status.HTTP_206_PARTIAL_CONTENT)
                 
             return response
         
