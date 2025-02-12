@@ -61,6 +61,7 @@ class OrderInfoSerializer(serializers.ModelSerializer):
         - `order_number`
         - `order_date`
         - `client_name`
+        - `notes`
         - `cif`
         - `status`
         - `status_id`
@@ -82,7 +83,7 @@ class OrderInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderInfo
         fields = [
-            'id_order', 'order_number', 'order_date', 'client_name', 'cif', 
+            'id_order', 'order_number', 'order_date', 'client_name', 'notes', 'cif', 
             'status', 'status_id', 'shipping_address', 'file_path', 
             'created_at', 'updated_at', 'lines'
         ]

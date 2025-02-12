@@ -19,6 +19,7 @@ class OrderInfo(models.Model):
     order_number = models.CharField(max_length=30, unique=True, verbose_name="Número de Pedido")
     order_date = models.DateField(verbose_name="Fecha del Pedido")
     client_name = models.CharField(max_length=30, verbose_name="Nombre del Cliente")
+    notes = models.TextField(max_length=255, verbose_name="Observaciones", blank=True, null=True)
     cif = models.CharField(max_length=15, verbose_name="CIF")
     status = models.ForeignKey(StatusType, on_delete=models.SET_NULL, db_column='status', null=True, verbose_name="Estado")
     shipping_address = models.CharField(max_length=50, verbose_name="Dirección de Envío")
