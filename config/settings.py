@@ -29,8 +29,6 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # Hosts permitidos
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
     '*',  # Reemplazar por el dominio real
 ]
 # Seguridad en producción
