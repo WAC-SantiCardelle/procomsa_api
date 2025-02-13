@@ -68,7 +68,6 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'django_extensions',  # Para runserver con SSL en local
-    'schema_viewer', # Para visualizar graficamente el squema de models
 ]
 
 MIDDLEWARE = [
@@ -173,14 +172,3 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 8
 }
 
-# Go to http://127.0.0.1:8000/schema-viewer/
-SCHEMA_VIEWER = {
-    'apps': [
-        'contenttypes',
-        'pedidos',
-    ],
-    'exclude': {
-        'auth': ['User'],
-        'pedidos': ['SomeModel'],
-    },
-}
