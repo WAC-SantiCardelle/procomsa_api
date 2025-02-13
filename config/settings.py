@@ -48,8 +48,8 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOWED_ORIGINS = [
     "https://tudominio.com",
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
+    "http://127.0.0.1:8080",
+    "http://localhost",
 ]
 
 # Application definition
