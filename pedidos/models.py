@@ -16,7 +16,7 @@ class StatusType(models.Model):
 
 class OrderInfo(models.Model):
     id_order = models.AutoField(primary_key=True, verbose_name="ID del Pedido")
-    order_number = models.CharField(max_length=30, unique=True, verbose_name="Número de Pedido")
+    order_number = models.CharField(max_length=30, verbose_name="Número de Pedido")
     order_date = models.DateField(verbose_name="Fecha del Pedido")
     client_name = models.CharField(max_length=30, verbose_name="Nombre del Cliente")
     notes = models.TextField(max_length=255, verbose_name="Observaciones", blank=True, null=True)

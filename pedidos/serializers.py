@@ -49,6 +49,7 @@ class OrderInfoSerializer(serializers.ModelSerializer):
         - `order_number`: Número de pedido (requerido).
         - `order_date`: Fecha del pedido (requerido).
         - `client_name`: Nombre del cliente (requerido).
+        - `notes`: Observaciones (opcional).
         - `cif`: CIF del cliente (requerido).
         - `status`: Estado del pedido (solo lectura).
         - `status_id`: ID del estado (requerido).
